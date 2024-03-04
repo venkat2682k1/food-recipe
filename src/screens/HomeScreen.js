@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TouchableOpacity, View, Text, ScrollView, SafeAreaView, Image, TextInput } from "react-native";
+import { TouchableOpacity, View, Text, ScrollView, Image, TextInput } from "react-native";
 import { MagnifyingGlassIcon } from "react-native-heroicons/outline";
 import { StatusBar } from "expo-status-bar";
 import { heightPercentageToDP as hp } from "react-native-responsive-screen";
@@ -7,6 +7,7 @@ import Categories from "../components/Categories";
 import axios from "axios";
 import Recipes from "../components/Recipes";
 import { useNavigation } from "@react-navigation/native";
+import { getAuth, signOut } from "firebase/auth";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -67,25 +68,23 @@ export default function HomeScreen() {
     }
   };
 
-  const handleLogout = () => {
-    // Navigate back to the registration page
-    navigation.navigate('Registration');
-    // Clear registration form data
-    clearRegistrationData(); // Assuming you have access to this function
-  };
 
-  // Function to clear registration form data (assuming it's accessible here)
-  const clearRegistrationData = () => {
-    // Implement logic to clear registration form data
-    // For example, you can call the clearForm function from RegistrationScreen component
-    // clearForm();
-  };
+  const handleSignOut = () => {
+    const auth = getAuth();
+    signOut(auth).then(() => {
+        // Sign-out successful.
+        navigation.navigate('Welcome');
+    }).catch((error) => {
+        // An error happened.
+        console.log(error.message);
+    });
+};
+
 
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
 
-      <SafeAreaView>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
@@ -104,7 +103,7 @@ export default function HomeScreen() {
                 borderRadius: hp(5),
               }}
             />
-            <TouchableOpacity onPress={handleLogout}>
+            <TouchableOpacity onPress={handleSignOut}>
               <Image
                 source={require("../../assets/image/LogOut.jpg")}
                 style={{
@@ -160,8 +159,8 @@ export default function HomeScreen() {
               <Recipes meals={meals} categories={categories} />
             )}
           </View>
+          <View style={{marginBottom:50}}></View>
         </ScrollView>
-      </SafeAreaView>
     </View>
   );
 }
