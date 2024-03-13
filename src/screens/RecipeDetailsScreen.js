@@ -15,23 +15,59 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import { ChevronLeftIcon } from "react-native-heroicons/outline";
-import { HeartIcon } from "react-native-heroicons/solid";
+import { HeartIcon, ShareIcon } from "react-native-heroicons/solid";
 import Loading from "../components/Loading";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import axios from "axios";
+import { Share } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function RecipeDetailsScreen(props) {
-  let item = props.route.params;
+  const item = props.route.params;
   const navigation = useNavigation();
   const [meal, setMeal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFavourite, setIsFavourite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
 
   console.log("Meal", meal);
 
   useEffect(() => {
     getMealData(item.idMeal);
   });
+
+  useEffect(() => {
+    const checkFavorite = async () => {
+      try {
+        const favorite = await AsyncStorage.getItem(`favorite_${item.idMeal}`);
+        setIsFavorite(favorite !== null);
+      } catch (error) {
+        console.log('Error checking favorite:', error.message);
+      }
+    };
+    checkFavorite();
+  }, []);
+  
+
+  const handleGoBack = () => {
+    navigation.goBack(); // Go back to the previous screen
+  };
+  const toggleFavorite = async () => {
+    try {
+      if (!isFavorite) {
+        // Add to favorites
+        await AsyncStorage.setItem(`favorite_${item.idMeal}`, JSON.stringify(item));
+      } else {
+        // Remove from favorites
+        await AsyncStorage.removeItem(`favorite_${item.idMeal}`);
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.log('Error toggling favorite:', error.message);
+    }
+  };
+  
 
   const getMealData = async (id) => {
     try {
@@ -60,16 +96,95 @@ export default function RecipeDetailsScreen(props) {
 
     return indexes;
   };
+ const shareRecipe = async () => {
+  try {
+    if (!meal) {
+      console.log("Recipe data not available");
+      return;
+    }
 
+    const message = `Check out this recipe: ${meal.strMeal}\n\nIngredients:\n${ingredientsIndexes(meal)
+      .map((i) => `${meal["strMeasure" + i]} ${meal["strIngredient" + i]}`)
+      .join("\n")}\n\nInstructions:\n${meal.strInstructions}`;
+
+    const imageUrl = meal.strMealThumb;
+
+    const result = await Share.share({
+      message: message,
+      url: imageUrl, // Share image URL
+    });
+
+    if (result.action === Share.sharedAction) {
+      if (result.activityType) {
+        // Shared via activity type
+        console.log(`Shared via ${result.activityType}`);
+      } else {
+        // Shared
+        console.log("Shared");
+      }
+    } else if (result.action === Share.dismissedAction) {
+      // Dismissed
+      console.log("Dismissed");
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+  
   return (
     <ScrollView
       className="flex-1 bg-white"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{
-        paddingBottom: 30,
+        paddingBottom:0
+  
       }}
     >
       <StatusBar style="white" />
+      <View style={{ backgroundColor: "#ffcc99" }}>
+        <Text
+          style={{
+            marginTop: 25,
+            fontWeight: "bold",
+            marginLeft: 100,
+            fontSize: 25,
+            padding: 13
+          }}
+        >
+           RecipeDetails
+        </Text>
+
+        <TouchableOpacity onPress={handleGoBack}>
+          <Image
+            source={require("../../assets/image/back.png")}
+            style={{
+              width: hp(4),
+              height: hp(5.5),
+              marginTop: -46,
+              resizeMode: "cover"
+            }}
+          />
+        </TouchableOpacity>
+        <View style={{
+              width: hp(4),
+              height: hp(5.5),
+              marginTop: -48,
+              marginLeft:340,
+              resizeMode: "cover"
+            }}>
+         
+     <TouchableOpacity onPress={toggleFavorite}>
+  {isFavorite ? (
+    <HeartIcon color="#f64e32" size={30} />
+  ) : (
+    <HeartIcon color="white" size={38} />
+  )}
+</TouchableOpacity>
+
+
+          </View>
+        </View>
 
       {/* Recipe Image */}
 
@@ -85,40 +200,33 @@ export default function RecipeDetailsScreen(props) {
       </View>
 
       {/* Back Button and Favorite Icon */}
-
-      <View className="w-full absolute flex-row justify-between items-center pt-10">
-        <View className="p-2 rounded-full bg-white ml-5">
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ChevronLeftIcon
-              size={hp(3.5)}
-              color={"#f64e32"}
-              strokeWidth={4.5}
-            />
+        
+  <View className="w-auto absolute  justify-between items-center" style={{marginTop
+  :360,marginLeft:345}}>
+     
+          <View className="p-2 rounded-full bg-white mr-1">
+          <TouchableOpacity onPress={shareRecipe}>
+            <ShareIcon color="#f64e32" size={25} />
           </TouchableOpacity>
         </View>
 
-        <View className="p-2 rounded-full bg-white mr-5">
-          <TouchableOpacity onPress={() => setIsFavourite(!isFavourite)}>
-            <HeartIcon
-              size={hp(3.5)}
-              color={isFavourite ? "#f64e32" : "gray"}
-              strokeWidth={4.5}
-            />
-          </TouchableOpacity>
-        </View>
+
+        
       </View>
 
       {/* Meal Description */}
-
+      
       {isLoading ? (
         <Loading size="large" className="mt-16" />
       ) : (
         <View
           className="px-4 flex justify-between space-y-4 bg-white mt-[-46]"
           style={{
-            borderTopLeftRadius: 50,
+            borderTopLeftRadius: 40,
             borderTopRightRadius: 50,
-            paddingTop: hp(3),
+            paddingTop: hp(4),
+            paddingBottom:10,
+            backgroundColor:"#ffcc99"
           }}
         >
           {/* Meal Name */}
@@ -231,4 +339,4 @@ export default function RecipeDetailsScreen(props) {
       )}
     </ScrollView>
   );
-}
+} 

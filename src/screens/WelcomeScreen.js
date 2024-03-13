@@ -3,11 +3,11 @@ import { View, Text, Image, TouchableOpacity, Animated } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import {
   widthPercentageToDP as wp,
-  heightPercentageToDP as hp, 
+  heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import LottieView from "lottie-react-native";
 
-export default function WelcomeScreen({navigation}) {
+export default function WelcomeScreen({ navigation }) {
   const animation = useRef(null);
 
   const [opacity] = useState(new Animated.Value(1));
@@ -127,18 +127,19 @@ export default function WelcomeScreen({navigation}) {
         </Text>
       </View>
 
-      <View style={{ flex: 1, justifyContent: "center", marginBottom: 5, alignItems: "center" }}>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('Register')}
-        style={{
-          backgroundColor: "#fff",
-          paddingVertical: hp(1),
-          paddingHorizontal: hp(5),
-          borderRadius: hp(3),
-        }}
-      >
-        <Text>Get Started</Text>
-      </TouchableOpacity>
+      <View style={{ flex: 1, justifyContent: "center", marginBottom: 5,  fontSize: hp(6),alignItems: "center" }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Register')}
+          style={{
+            backgroundColor: "#03086e",
+            paddingVertical: hp(1),
+            paddingHorizontal: hp(4),
+            borderRadius: hp(5),
+           
+          }}
+        >
+          <Animated.Text style={{ opacity, fontSize: hp(2),fontWeight: "bold",color:"white" }}>Get Started</Animated.Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
